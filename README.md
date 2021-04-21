@@ -11,4 +11,6 @@ discord.js
 
 ## ANDRE REQS
 
-at du har Microsoft Helle stemmepakken installeret i Speech i stedet for Speech-OneCore
+At du har Microsoft Helle stemmepakken installeret i Speech i stedet for Speech-OneCore
+
+Registrerings filen kan måske fikse det
