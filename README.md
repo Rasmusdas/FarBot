@@ -8,6 +8,11 @@ say
 
 discord.js
 
+ffmpeg-static
+
+@discordjs/opus
+
+ytdl-core
 
 ## ANDRE REQS
 
