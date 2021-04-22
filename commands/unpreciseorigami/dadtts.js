@@ -32,11 +32,12 @@ module.exports = {
         {
             index = Math.floor(Math.random()*dadJokes.length);
         }
-        dadJokes[index] = dadJokes[index].toLowerCase();
-        dadJokes[index] = dadJokes[index].split("å").join("aa")
-        dadJokes[index] = dadJokes[index].split("ø").join("oe")
-        dadJokes[index] = dadJokes[index].split("æ").join("ae")
-        dadJokes[index] = dadJokes[index].split("–").join("-")
+        var tempJoke = dadJokes[index];
+        tempJoke = tempJoke.toLowerCase();
+        tempJoke = tempJoke.split("å").join("aa")
+        tempJoke = tempJoke.split("ø").join("oe")
+        tempJoke = tempJoke.split("æ").join("ae")
+        tempJoke = tempJoke.split("–").join("-")
         
         powershellEmitter.on("data",(bytes) => 
         {
@@ -46,6 +47,7 @@ module.exports = {
                 var channel = user.voice.channel;
                 channel.join().then(connection => 
                     {
+                        message.reply(dadJokes[index])
                         var buffer = Readable.from(Buffer.from(bytes));
                         var talking = connection.play(buffer)
                         talking.on("finish", ()=>
@@ -61,7 +63,7 @@ module.exports = {
             }
         })
 
-        var vals = setupPowerShell(dadJokes[index]);
+        var vals = setupPowerShell(tempJoke);
 
         var args = vals[0];
         var pipedData = vals[1];
