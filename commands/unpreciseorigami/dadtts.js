@@ -8,7 +8,7 @@ const { Readable } = require("stream");
 class DataFinished extends EventEmitter {}
 const config = require(path.dirname(require.main.filename)+"\\config.json")
 
-const powershellEmitter = new DataFinished(); 
+var powershellEmitter = null;
 const dadJokes = fs.readFileSync("./dadjokes.txt","utf-8").split("\n");
 
 var lastIndex = -1;
@@ -26,6 +26,7 @@ module.exports = {
      */
     execute(bot,message,arg)
     {
+        powershellEmitter = new DataFinished();
         var user = message.guild.members.cache.get(message.author.id);
         var index = Math.floor(Math.random()*dadJokes.length);
         while(index == lastIndex)
@@ -39,11 +40,10 @@ module.exports = {
         tempJoke = tempJoke.split("æ").join("ae")
         tempJoke = tempJoke.split("–").join("-")
         
-        powershellEmitter.on("data",(bytes) => 
+        var event = powershellEmitter.on("data",(bytes) => 
         {
             if(user.voice.channel)
             {
-                
                 var channel = user.voice.channel;
                 channel.join().then(connection => 
                     {
@@ -103,11 +103,9 @@ function setupPowerShell(text)
 function runPowerShell(args,pipedData,options)
 {
     var child = childProcess.spawn("powershell", args, options)
-
         child.stdin.setEncoding('utf-8')
         child.stdin.setEncoding('utf-8')
         child.stdout.setEncoding('utf-8')
-        console.log(pipedData);
         if (pipedData) {
             child.stdin.end(pipedData)
         }
