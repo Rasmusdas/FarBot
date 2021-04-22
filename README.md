@@ -4,15 +4,11 @@ En discord bot der fortæller far jokes. Ja den er dårlig og det skal den også
 
 ## KRÆVER FØLGENDE NODE PAKKER
 
-say
-
 discord.js
 
 ffmpeg-static
 
 @discordjs/opus
-
-ytdl-core
 
 ## ANDRE REQS
 
