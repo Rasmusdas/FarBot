@@ -37,9 +37,9 @@ function pickRandom(max) {
 }
 
 bot.on("ready", () => {
-    console.log(`RR bot is ready, logged in as: ${bot.user.tag}`);
+    console.log(`Far botten er klar til at fortælle dårlige jokes! logged in as: ${bot.user.tag}`);
 
-   bot.user.setActivity("Beep Boop")
+   bot.user.setActivity("Klar til at fortælle jokes!")
 });
 
 bot.on("message", async message => {

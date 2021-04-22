@@ -45,6 +45,7 @@ module.exports = {
             if(user.voice.channel)
             {
                 var channel = user.voice.channel;
+                bot.user.setActivity("Fortæller en god joke!")
                 channel.join().then(connection => 
                     {
                         message.reply(dadJokes[index])
@@ -53,6 +54,7 @@ module.exports = {
                         talking.on("finish", ()=>
                         {
                             channel.leave();
+                            bot.user.setActivity("Klar til at fortælle jokes!")
                         })
                     })
             }
