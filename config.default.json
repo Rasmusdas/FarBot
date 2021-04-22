@@ -1,4 +1,5 @@
 { 
     "token": "TOKEN",
-    "globalPrefix": "!"
+    "globalPrefix": "!",
+    "voice": "VOICE"
 }
