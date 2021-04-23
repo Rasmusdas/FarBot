@@ -13,7 +13,7 @@ const dadJokes = fs.readFileSync("./dadjokes.txt","utf-8").split("\n");
 
 var lastIndex = -1;
 module.exports = {
-    name: "fartts",
+    name: "test",
 	description: "Fortæller en far joke, men i en voice kanal!",
 	useParams: "far",
     useExample: "[prefix]far",
@@ -35,9 +35,9 @@ module.exports = {
         }
         var tempJoke = dadJokes[index];
         tempJoke = tempJoke.toLowerCase();
-        tempJoke = tempJoke.split("å").join("aa")
-        tempJoke = tempJoke.split("ø").join("oe")
-        tempJoke = tempJoke.split("æ").join("ae")
+        //tempJoke = tempJoke.split("å").join("aa")
+        //tempJoke = tempJoke.split("ø").join("oe")
+        //tempJoke = tempJoke.split("æ").join("ae")
         tempJoke = tempJoke.split("–").join("-")
         
         var event = powershellEmitter.on("data",(bytes) => 
@@ -91,11 +91,10 @@ function setupPowerShell(text)
     psCommand += `$OutStream = [System.IO.MemoryStream]::new(100);`
     psCommand += `$speak.SetOutputToWaveStream($OutStream);`
     psCommand += `$speak.SelectVoice(\\"` + config.voice + `\\");`;
-    psCommand += `$speak.Speak([Console]::In.ReadToEnd());`
+    text = text.replace("\"" , "")
+    psCommand += `$speak.Speak(\\"` + text + `\\");`
     psCommand += "$data = $OutStream.ToArray() -join '-';"
     psCommand += `Write-Output $data;`
-
-    pipedData += text
     
     args.push(psCommand)
 
