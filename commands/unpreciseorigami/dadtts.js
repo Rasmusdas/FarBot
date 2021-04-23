@@ -13,7 +13,7 @@ const dadJokes = fs.readFileSync("./dadjokes.txt","utf-8").split("\n");
 
 var lastIndex = -1;
 module.exports = {
-    name: "test",
+    name: "fartts",
 	description: "Fortæller en far joke, men i en voice kanal!",
 	useParams: "far",
     useExample: "[prefix]far",
