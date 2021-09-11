@@ -1,5 +1,6 @@
 
 var path = require('path');
+var lastJokeIndex = -1;
 const Discord = require("discord.js");
 const fs = require("fs");
 const childProcess = require('child_process');
@@ -28,35 +29,39 @@ module.exports = {
     {
         powershellEmitter = new DataFinished();
         var user = message.guild.members.cache.get(message.author.id);
-        var index = Math.floor(Math.random()*dadJokes.length);
-        while(index == lastIndex)
-        {
-            index = Math.floor(Math.random()*dadJokes.length);
-        }
-        var tempJoke = dadJokes[index];
-        tempJoke = tempJoke.toLowerCase();
-        //tempJoke = tempJoke.split("å").join("aa")
-        //tempJoke = tempJoke.split("ø").join("oe")
-        //tempJoke = tempJoke.split("æ").join("ae")
-        tempJoke = tempJoke.split("–").join("-")
         
+        var jokesAmount = 0;
+        if(arg.length > 0)
+        {
+            jokesAmount = arg[0]-1;
+        }
+
+        tellJoke();
+
         var event = powershellEmitter.on("data",(bytes) => 
         {
             if(user.voice.channel)
             {
-                var channel = user.voice.channel;
-                bot.user.setActivity("Fortæller en god joke!")
-                channel.join().then(connection => 
+                user.voice.channel.join().then(connection => 
+                {
+                    var buffer = Readable.from(Buffer.from(bytes));
+                    var talking = connection.play(buffer);
+                    bot.user.setActivity("Fortæller gode jokes!");
+                    talking.on("finish",() => 
                     {
-                        message.reply(dadJokes[index])
-                        var buffer = Readable.from(Buffer.from(bytes));
-                        var talking = connection.play(buffer)
-                        talking.on("finish", ()=>
+                        if(jokesAmount > 0)
                         {
-                            channel.leave();
-                            bot.user.setActivity("Klar til at fortælle jokes!")
-                        })
+                            jokesAmount--;
+                            tellJoke();
+                        }
+                        else
+                        {
+                            bot.user.setActivity("Klar til at fortælle gode jokes!");
+                            user.voice.channel.leave();
+                        }
                     })
+                });
+                
             }
             else
             {
@@ -64,17 +69,6 @@ module.exports = {
                 return;
             }
         })
-
-        var vals = setupPowerShell(tempJoke);
-
-        var args = vals[0];
-        var pipedData = vals[1];
-
-        var options = {"shell": true}
-        
-        runPowerShell(args,pipedData,options);
-
-
 
         
 
@@ -122,5 +116,28 @@ function runPowerShell(args,pipedData,options)
             bytes = chunks.replace("\r","").replace("\n","").replace(" ","").split("-")
             powershellEmitter.emit("data", bytes);
         });
+}
+
+function tellJoke()
+{
+    var index = Math.floor(Math.random()*dadJokes.length);
+    while(index == lastJokeIndex)
+    {
+        index = Math.floor(Math.random()*dadJokes.length);
+    }
+
+    lastJokeIndex = index;
+
+    var joke = dadJokes[index];
+    joke = joke.toLowerCase();
+    joke = joke.split("–").join("-")
+    var vals = setupPowerShell(joke);
+    var args = vals[0];
+    var pipedData = vals[1];
+    var options = {"shell": true}
+
+    
+
+    runPowerShell(args,pipedData,options);
 }
 
