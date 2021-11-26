@@ -10,20 +10,19 @@ namespace DadBotNet
 
         public async Task MainAsync()
         {
-            using (var services = ConfigureServices())
-            {
-                var client = services.GetRequiredService<DiscordSocketClient>();
+            var services = ConfigureServices();
 
-                client.Log += LogAsync;
-                services.GetRequiredService<CommandService>().Log += LogAsync;
+            var client = services.GetRequiredService<DiscordSocketClient>();
 
-                string token = services.GetRequiredService<ConfigService>().GetField("token");
+            client.Log += LogAsync;
+            services.GetRequiredService<CommandService>().Log += LogAsync;
 
-                await client.LoginAsync(TokenType.Bot, token);
-                await client.StartAsync();
+            var token = services.GetRequiredService<ConfigService>().GetField("token");
 
-                await Task.Delay(Timeout.Infinite);
-            }
+            await client.LoginAsync(TokenType.Bot, token);
+            await client.StartAsync();
+
+            await Task.Delay(Timeout.Infinite);
         }
 
         private Task LogAsync(LogMessage log)
@@ -41,6 +40,7 @@ namespace DadBotNet
                 .AddSingleton<CommandService>()
                 .AddSingleton<HttpClient>()
                 .AddSingleton<ConfigService>()
+                .AddSingleton<DadJokeService>()
                 .BuildServiceProvider();
         }
     }
