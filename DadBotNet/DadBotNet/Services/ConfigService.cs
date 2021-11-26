@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace DadBotNet.Services
 {
-    internal class ConfigService : IConfigService
+    public class ConfigService : IConfigService
     {
         Config config;
 

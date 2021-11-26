@@ -10,15 +10,32 @@ namespace DadBotNet.Services
     public class CommandHandler
     {
         private readonly DiscordSocketClient _client;
+        private readonly IConfigService _config;
         private readonly CommandService _commands;
         private readonly char _commandPrefix;
 
+        private readonly ServiceProvider _services;
+
         // Retrieve client and CommandService instance via ctor
-        internal CommandHandler(DiscordSocketClient client, CommandService commands, ConfigService config)
+        public CommandHandler(DiscordSocketClient client, CommandService commands, ConfigService config)
         {
             _commands = commands;
             _client = client;
+            _config = config;
             _commandPrefix = config.GetField("globalPrefix").ToCharArray()[0];
+            _services = ConfigureServices();
+        }
+
+        private ServiceProvider ConfigureServices()
+        {
+            return new ServiceCollection()
+                .AddSingleton(_client)
+                .AddSingleton(_commands)
+                .AddSingleton(_config)
+                .AddSingleton<DadJokeService>()
+                .AddSingleton<CommandHandler>()
+                .AddSingleton<HttpClient>()
+                .BuildServiceProvider();
         }
 
         public async Task InstallCommandsAsync()
@@ -36,7 +53,7 @@ namespace DadBotNet.Services
             // See Dependency Injection guide for more information.
 
             await _commands.AddModulesAsync(assembly: Assembly.GetEntryAssembly(),
-                                            services: null);
+                                            services: _services);
         }
 
         private async Task HandleCommandAsync(SocketMessage messageParam)
@@ -56,13 +73,14 @@ namespace DadBotNet.Services
 
             // Create a WebSocket-based command context based on the message
             var context = new SocketCommandContext(_client, message);
-
             // Execute the command with the command context we just
             // created, along with the service provider for precondition checks.
+            
+
             await _commands.ExecuteAsync(
                 context: context,
                 argPos: argPos,
-                services: null);
+                services: _services);
         }
     }
 }

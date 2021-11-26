@@ -22,6 +22,8 @@ namespace DadBotNet
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
 
+            await services.GetRequiredService<CommandHandler>().InstallCommandsAsync();
+
             await Task.Delay(Timeout.Infinite);
         }
 
@@ -36,11 +38,10 @@ namespace DadBotNet
         {
             return new ServiceCollection()
                 .AddSingleton<DiscordSocketClient>()
-                .AddSingleton<CommandHandler>()
                 .AddSingleton<CommandService>()
-                .AddSingleton<HttpClient>()
                 .AddSingleton<ConfigService>()
-                .AddSingleton<DadJokeService>()
+                .AddSingleton<CommandHandler>()
+                .AddSingleton<HttpClient>()
                 .BuildServiceProvider();
         }
     }

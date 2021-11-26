@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DadBotNet.Services
 {
-    internal interface IConfigService
+    public interface IConfigService
     {
         string GetField(string field);
     }

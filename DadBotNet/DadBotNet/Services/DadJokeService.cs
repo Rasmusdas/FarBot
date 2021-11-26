@@ -4,7 +4,7 @@
     {
         public string GetJoke()
         {
-            throw new NotImplementedException();
+            return "Den bedste joke nogensinde!";
         }
     }
 }
