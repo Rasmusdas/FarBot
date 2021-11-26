@@ -45,12 +45,8 @@ namespace DadBotNet.Modules
             var cleanedDadJoke = PrepareJokeForPowershell(dadJoke);
 
             Process powershellProcess = CreateTTSProcess(cleanedDadJoke);
-
             powershellProcess.Start();
-
-            Task.Delay(2500);
-
-            string byteResult = powershellProcess.StandardOutput.ReadToEnd();
+            string byteResult = await powershellProcess.StandardOutput.ReadToEndAsync();
 
             byte[] voiceBytes = ConvertJokeResultToVoiceBytes(byteResult);
 
@@ -91,7 +87,7 @@ namespace DadBotNet.Modules
             var command = "Add-Type -AssemblyName System.speech;$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer;";
             command += "$OutStream = [System.IO.MemoryStream]::new(100);";
             command += "$speak.SetOutputToWaveStream($OutStream);";
-            command += $"$speak.Speak(\"{cleanedDadJoke}\");";
+            command += $"$speak.Speak(\\\"{cleanedDadJoke}\\\");";
             command += "$data = $OutStream.ToArray() -join '-';";
             command += "Write-Output $data;";
 
