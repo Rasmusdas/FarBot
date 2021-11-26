@@ -7,17 +7,16 @@ using System.Threading.Tasks;
 
 namespace DadBotNet.Services
 {
-    internal class ConfigService
+    internal class ConfigService : IConfigService
     {
         Config config;
 
-        internal ConfigService()
+        public ConfigService()
         {
             config = new Config(File.ReadAllText("config.json"));
         }
 
-
-        internal string GetField(string field)
+        public string GetField(string field)
         {
             return config.GetField(field);
         }

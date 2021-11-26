@@ -37,6 +37,7 @@ namespace DadBotNet
         {
             return new ServiceCollection()
                 .AddSingleton<DiscordSocketClient>()
+                .AddSingleton<CommandHandler>()
                 .AddSingleton<CommandService>()
                 .AddSingleton<HttpClient>()
                 .AddSingleton<ConfigService>()
