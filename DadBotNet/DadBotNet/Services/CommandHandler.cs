@@ -33,6 +33,7 @@ namespace DadBotNet.Services
                 .AddSingleton(_commands)
                 .AddSingleton(_config)
                 .AddSingleton<DadJokeService>()
+                .AddSingleton<AudioService>()
                 .AddSingleton<CommandHandler>()
                 .AddSingleton<HttpClient>()
                 .BuildServiceProvider();

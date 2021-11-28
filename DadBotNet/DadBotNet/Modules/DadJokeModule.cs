@@ -10,18 +10,20 @@ namespace DadBotNet.Modules
 {
     public class DadJokeModule : ModuleBase<SocketCommandContext>
     {
-        DadJokeService _service;
+        DadJokeService _dadJokeService;
+        AudioService _audioService;
 
-        public DadJokeModule(DadJokeService service)
+        public DadJokeModule(DadJokeService dadJokeService, AudioService audioService)
         {
-            _service = service;
+            _dadJokeService = dadJokeService;
+            _audioService = audioService;
         }
 
         [Command("far")]
         [Summary("Fortæller en far joke")]
         public async Task TellJokeInTextChannel()
         {
-            await Context.Channel.SendMessageAsync(_service.GetJoke());
+            await Context.Channel.SendMessageAsync(_dadJokeService.GetJoke());
         }
 
         [Command("Dad")]
@@ -33,57 +35,64 @@ namespace DadBotNet.Modules
         [Summary("Fortæller en far joke i en voice kanal")]
         public async Task TellJokeInVoiceChannel()
         {
-            if(((SocketGuildUser)Context.User).VoiceChannel == null)
+            await TellJokeInVoice();
+        }
+
+        private async Task TellJokeInVoice()
+        {
+            SocketGuildUser user = ((SocketGuildUser)Context.User);
+            if (user.VoiceChannel == null)
             {
                 await Context.Message.ReplyAsync("Du er ikke i en voice kanal :/");
 
                 return;
             }
 
-            var dadJoke = _service.GetJoke();
+            Console.WriteLine("Getting Joke");
+            var dadJoke = _dadJokeService.GetJoke();
 
+            Console.WriteLine("Processing Joke");
             var cleanedDadJoke = PrepareJokeForPowershell(dadJoke);
 
+            Console.WriteLine("Creating Process");
             Process powershellProcess = CreateTTSProcess(cleanedDadJoke);
+
+            Console.WriteLine("Starting Process");
             powershellProcess.Start();
+
+            Console.WriteLine("Reading Data from Process");
             string byteResult = await powershellProcess.StandardOutput.ReadToEndAsync();
 
-            byte[] voiceBytes = ConvertJokeResultToVoiceBytes(byteResult);
+            Console.WriteLine("Parsing Data");
+            byte[] voiceBytes = await Task.Run(() => ConvertJokeResultToVoiceBytes(byteResult));
 
+            Console.WriteLine("Joining Channel");
+            await _audioService.JoinAudio(user.VoiceChannel);
 
+            Console.WriteLine("Speaking in Channel");
+            await _audioService.SendAudioAsync(user.Guild, voiceBytes);
 
-
-
-            /*
-            let args = []
-            let pipedData = ''
-
-            let psCommand = `Add-Type -AssemblyName System.speech;$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer;`
-
-            psCommand += `$OutStream = [System.IO.MemoryStream]::new(100);`
-            psCommand += `$speak.SetOutputToWaveStream($OutStream);`
-            psCommand += `$speak.SelectVoice(\\"` + config.voice + `\\");`;
-            text = text.replace("\"" , "")
-            psCommand += `$speak.Speak(\\"` + text + `\\");`
-            psCommand += "$data = $OutStream.ToArray() -join '-';"
-            psCommand += `Write-Output $data;`
-    
-            args.push(psCommand)
-
-            return [args,pipedData];
-             */
+            Console.WriteLine("Leaving Channel");
+            //await _audioService.LeaveAudio();
         }
 
         private byte[] ConvertJokeResultToVoiceBytes(string byteResult)
         {
-            Console.WriteLine(byteResult);
+            string[] splitBytes = byteResult.Split('-');
 
-            return null;
+            byte[] bytes = new byte[splitBytes.Length];
+
+            for (int i = 0; i < splitBytes.Length; i++)
+            {
+                bytes[i] = byte.Parse(splitBytes[i]);
+            }
+
+            return bytes;
         }
 
         private Process CreateTTSProcess(string cleanedDadJoke)
         {
-            
+
             var command = "Add-Type -AssemblyName System.speech;$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer;";
             command += "$OutStream = [System.IO.MemoryStream]::new(100);";
             command += "$speak.SetOutputToWaveStream($OutStream);";
