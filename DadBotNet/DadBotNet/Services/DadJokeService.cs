@@ -4,7 +4,7 @@
     {
         public string GetJoke()
         {
-            return "Den bedste joke nogensinde!";
+            return "Den bedste joke nogensinde!Den bedste joke nogensinde!Den bedste joke nogensinde!Den bedste joke nogensinde!";
         }
     }
 }

@@ -31,7 +31,7 @@ namespace DadBotNet.Modules
         public async Task AliasDadTellJokeInTextChannel() => await TellJokeInTextChannel();
 
 
-        [Command("fartts")]
+        [Command("fartts", RunMode = RunMode.Async)]
         [Summary("Fortæller en far joke i en voice kanal")]
         public async Task TellJokeInVoiceChannel()
         {
@@ -64,7 +64,7 @@ namespace DadBotNet.Modules
             string byteResult = await powershellProcess.StandardOutput.ReadToEndAsync();
 
             Console.WriteLine("Parsing Data");
-            byte[] voiceBytes = await Task.Run(() => ConvertJokeResultToVoiceBytes(byteResult));
+            byte[] voiceBytes = ConvertJokeResultToVoiceBytes(byteResult);
 
             Console.WriteLine("Joining Channel");
             await _audioService.JoinAudio(user.VoiceChannel);
@@ -73,7 +73,7 @@ namespace DadBotNet.Modules
             await _audioService.SendAudioAsync(user.Guild, voiceBytes);
 
             Console.WriteLine("Leaving Channel");
-            //await _audioService.LeaveAudio();
+            await _audioService.LeaveAudio();
         }
 
         private byte[] ConvertJokeResultToVoiceBytes(string byteResult)
@@ -99,15 +99,14 @@ namespace DadBotNet.Modules
             command += $"$speak.Speak(\\\"{cleanedDadJoke}\\\");";
             command += "$data = $OutStream.ToArray() -join '-';";
             command += "Write-Output $data;";
-
+            Console.WriteLine(command);
             ProcessStartInfo powerShellProcessInfo = new();
 
             powerShellProcessInfo.FileName = @"powershell.exe";
             powerShellProcessInfo.Arguments = command;
             powerShellProcessInfo.RedirectStandardOutput = true;
-            powerShellProcessInfo.RedirectStandardError = true;
             powerShellProcessInfo.UseShellExecute = false;
-            powerShellProcessInfo.CreateNoWindow = true;
+            powerShellProcessInfo.CreateNoWindow = false;
 
             Process process = new();
             process.StartInfo = powerShellProcessInfo;
