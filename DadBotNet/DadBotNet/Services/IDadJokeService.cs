@@ -9,5 +9,7 @@ namespace DadBotNet.Services
     public interface IDadJokeService
     {
         string GetJoke();
+
+        bool AddJoke(string joke);
     }
 }

@@ -12,11 +12,15 @@ namespace DadBotNet.Modules
     {
         DadJokeService _dadJokeService;
         AudioService _audioService;
+        IConfigService _configService;
 
-        public DadJokeModule(DadJokeService dadJokeService, AudioService audioService)
+        bool isTalking;
+
+        public DadJokeModule(DadJokeService dadJokeService, AudioService audioService, IConfigService configService)
         {
             _dadJokeService = dadJokeService;
             _audioService = audioService;
+            _configService = configService;
         }
 
         [Command("far")]
@@ -43,7 +47,7 @@ namespace DadBotNet.Modules
             SocketGuildUser user = ((SocketGuildUser)Context.User);
             if (user.VoiceChannel == null)
             {
-                await Context.Message.ReplyAsync("Du er ikke i en voice kanal :/");
+                await Context.Message.ReplyAsync("Jeg ved ikke hvordan man sender lyd gennem tekst. Beklager!");
 
                 return;
             }
@@ -92,13 +96,16 @@ namespace DadBotNet.Modules
 
         private Process CreateTTSProcess(string cleanedDadJoke)
         {
-
+            string voiceType = _configService.GetField("voice");
             var command = "Add-Type -AssemblyName System.speech;$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer;";
+            command += $"$speak.SelectVoice(\\\"{voiceType}\\\");";
             command += "$OutStream = [System.IO.MemoryStream]::new(100);";
             command += "$speak.SetOutputToWaveStream($OutStream);";
             command += $"$speak.Speak(\\\"{cleanedDadJoke}\\\");";
+            command += "$speak.Dispose();";
             command += "$data = $OutStream.ToArray() -join '-';";
             command += "Write-Output $data;";
+
             Console.WriteLine(command);
             ProcessStartInfo powerShellProcessInfo = new();
 

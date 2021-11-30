@@ -9,10 +9,14 @@
 
   <ItemGroup>
     <None Remove="config.json" />
+    <None Remove="dadjokes.txt" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="dadjokes.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
