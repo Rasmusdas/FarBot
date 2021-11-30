@@ -1,4 +1,5 @@
 ﻿using DadBotNet.Models;
+using DadBotNet.Utils;
 
 namespace DadBotNet.Services
 {
@@ -12,6 +13,11 @@ namespace DadBotNet.Services
 
         public DadJokeService(IConfigService configService)
         {
+            if (!Directory.Exists(Directory.GetCurrentDirectory() + "/Jokes"))
+            {
+                Debug.Log("Could not find /Jokes. Creating it instead", DebugLevel.Warning);
+                Directory.CreateDirectory(Directory.GetCurrentDirectory() + "/Jokes");
+            }
             _configService = configService;
 
             allowSaving = bool.Parse(configService.GetField("allowWriteToJokeFile"));
@@ -22,20 +28,20 @@ namespace DadBotNet.Services
 
             var jokesFromFile = File.ReadAllLines(path);
             List<Joke> jokeList = new List<Joke>();
-            foreach(var joke in jokesFromFile)
+            for (int i = 0; i < jokesFromFile.Length; i++)
             {
-                jokeList.Add(new Joke(joke));
+                jokeList.Add(new Joke(jokesFromFile[i],i));
             }
 
             jokes = jokeList.AsReadOnly();
         }
 
-        public bool AddJoke(string joke)
+        public bool AddJoke(Joke joke)
         {
-            throw new NotImplementedException("Support for adding jokes not added :(");
+            throw new NotImplementedException();
         }
 
-        public string GetJoke()
+        public Joke GetJoke()
         {
             int newJokeIndex = random.Next(jokes.Count);
 
@@ -44,7 +50,19 @@ namespace DadBotNet.Services
                 newJokeIndex = random.Next(jokes.Count);
             }
 
-            return jokes[newJokeIndex].ToString();
+            return jokes[0];
+        }
+
+        public byte[] GetJokeByteData(Joke joke)
+        {
+            var path = $"{Directory.GetCurrentDirectory()}/Jokes/joke{joke.jokeIndex}";
+
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+
+            return File.ReadAllBytes(path);
         }
     }
 }

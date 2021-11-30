@@ -1,0 +1,8 @@
+{
+  "token": "",
+  "globalPrefix": "!",
+  "voice": "Microsoft Helle",
+  "jokeFile": "dadjokes.txt",
+  "allowWriteToJokeFile": "true",
+  "enableDebugInfo": "true"
+}

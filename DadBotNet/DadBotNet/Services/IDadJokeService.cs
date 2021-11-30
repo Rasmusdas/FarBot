@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DadBotNet.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,8 +9,8 @@ namespace DadBotNet.Services
 {
     public interface IDadJokeService
     {
-        string GetJoke();
+        Joke GetJoke();
 
-        bool AddJoke(string joke);
+        bool AddJoke(Joke joke);
     }
 }

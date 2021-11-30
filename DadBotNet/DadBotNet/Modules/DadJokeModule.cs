@@ -1,10 +1,12 @@
 ﻿using DadBotNet.Services;
 using System;
 using System.Collections.Generic;
+using DadBotNet.Utils;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Debug = DadBotNet.Utils.Debug;
 
 namespace DadBotNet.Modules
 {
@@ -25,24 +27,48 @@ namespace DadBotNet.Modules
 
         [Command("far")]
         [Summary("Fortæller en far joke")]
+        [Alias("dad")]
         public async Task TellJokeInTextChannel()
         {
-            await Context.Channel.SendMessageAsync(_dadJokeService.GetJoke());
+            await Context.Channel.SendMessageAsync(_dadJokeService.GetJoke().ToString());
         }
 
-        [Command("Dad")]
-        [Summary("Tells a dad Joke")]
-        public async Task AliasDadTellJokeInTextChannel() => await TellJokeInTextChannel();
 
 
         [Command("fartts", RunMode = RunMode.Async)]
         [Summary("Fortæller en far joke i en voice kanal")]
+        [Alias("dadtts")]
         public async Task TellJokeInVoiceChannel()
         {
-            await TellJokeInVoice();
+            await TellJokeInVoiceChannel();
         }
 
-        private async Task TellJokeInVoice()
+        [Command("fartts", RunMode = RunMode.Async)]
+        [Summary("Fortæller en far joke i en voice kanal")]
+        [Alias("dadtts")]
+        public async Task TellJokeInVoiceChannel(string arguments = "")
+        {
+            if(int.TryParse(arguments, out int rate))
+            {
+                if(rate < -10)
+                {
+                    rate = -10;
+                }
+
+                if(rate > 10)
+                {
+                    rate = 10;
+                }
+                await TellJokeInVoice(rate);
+            }
+            else
+            {
+                await TellJokeInVoice();
+            }
+            
+        }
+
+        private async Task TellJokeInVoice(int talkRate = 0)
         {
             SocketGuildUser user = ((SocketGuildUser)Context.User);
             if (user.VoiceChannel == null)
@@ -52,31 +78,39 @@ namespace DadBotNet.Modules
                 return;
             }
 
-            Console.WriteLine("Getting Joke");
+            Debug.Log("Getting Joke");
             var dadJoke = _dadJokeService.GetJoke();
 
-            Console.WriteLine("Processing Joke");
-            var cleanedDadJoke = PrepareJokeForPowershell(dadJoke);
+            byte[] voiceBytes = _dadJokeService.GetJokeByteData(dadJoke);
 
-            Console.WriteLine("Creating Process");
-            Process powershellProcess = CreateTTSProcess(cleanedDadJoke);
+            if (!dadJoke.AlreadyProcessed)
+            {
+                Debug.Log("Joke bytes were not found. Generating new ones",DebugLevel.Warning);
+                Debug.Log("Processing Joke");
+                var cleanedDadJoke = PrepareJokeForPowershell(dadJoke.ToString());
 
-            Console.WriteLine("Starting Process");
-            powershellProcess.Start();
+                Debug.Log("Creating Process");
+                Process powershellProcess = CreateTTSProcess(cleanedDadJoke);
 
-            Console.WriteLine("Reading Data from Process");
-            string byteResult = await powershellProcess.StandardOutput.ReadToEndAsync();
+                Debug.Log("Starting Process");
+                powershellProcess.Start();
 
-            Console.WriteLine("Parsing Data");
-            byte[] voiceBytes = ConvertJokeResultToVoiceBytes(byteResult);
+                Debug.Log("Reading Data from Process");
+                string byteResult = await powershellProcess.StandardOutput.ReadToEndAsync();
 
-            Console.WriteLine("Joining Channel");
+                Debug.Log("Parsing Data");
+                voiceBytes = ConvertJokeResultToVoiceBytes(byteResult);
+
+                File.WriteAllBytes($"{Directory.GetCurrentDirectory()}/Jokes/joke{dadJoke.jokeIndex}",voiceBytes);
+            }
+
+            Debug.Log("Joining Channel");
             await _audioService.JoinAudio(user.VoiceChannel);
 
-            Console.WriteLine("Speaking in Channel");
+            Debug.Log("Speaking in Channel");
             await _audioService.SendAudioAsync(user.Guild, voiceBytes);
 
-            Console.WriteLine("Leaving Channel");
+            Debug.Log("Leaving Channel");
             await _audioService.LeaveAudio();
         }
 
@@ -99,14 +133,15 @@ namespace DadBotNet.Modules
             string voiceType = _configService.GetField("voice");
             var command = "Add-Type -AssemblyName System.speech;$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer;";
             command += $"$speak.SelectVoice(\\\"{voiceType}\\\");";
-            command += "$OutStream = [System.IO.MemoryStream]::new(100);";
-            command += "$speak.SetOutputToWaveStream($OutStream);";
+            command += " $format = New-Object System.Speech.AudioFormat.SpeechAudioFormatInfo(96000,[System.Speech.AudioFormat.AudioBitsPerSample]::Sixteen,[System.Speech.AudioFormat.AudioChannel]::Mono);";
+            command += "$OutStream = [System.IO.MemoryStream]::new(1000);";
+            command += "$speak.SetOutputToAudioStream($OutStream,$format);";
             command += $"$speak.Speak(\\\"{cleanedDadJoke}\\\");";
             command += "$speak.Dispose();";
             command += "$data = $OutStream.ToArray() -join '-';";
             command += "Write-Output $data;";
 
-            Console.WriteLine(command);
+            Debug.Log(command);
             ProcessStartInfo powerShellProcessInfo = new();
 
             powerShellProcessInfo.FileName = @"powershell.exe";
@@ -124,6 +159,8 @@ namespace DadBotNet.Modules
 
         private string PrepareJokeForPowershell(string dadJoke)
         {
+            dadJoke = dadJoke.Replace("\"", "\\\"");
+
             return dadJoke;
         }
     }

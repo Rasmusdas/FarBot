@@ -1,4 +1,5 @@
 ﻿using DadBotNet.Services;
+using DadBotNet.Utils;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DadBotNet
@@ -11,7 +12,6 @@ namespace DadBotNet
         public async Task MainAsync()
         {
             var services = ConfigureServices();
-
             var client = services.GetRequiredService<DiscordSocketClient>();
 
             client.Log += LogAsync;
