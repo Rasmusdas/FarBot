@@ -108,7 +108,7 @@ namespace DadBotNet.Modules
             await _audioService.JoinAudio(user.VoiceChannel);
 
             Debug.Log("Speaking in Channel");
-            await _audioService.SendAudioAsync(user.Guild, voiceBytes);
+            await _audioService.SendAudioAsyncFFMPEG();
 
             Debug.Log("Leaving Channel");
             await _audioService.LeaveAudio();

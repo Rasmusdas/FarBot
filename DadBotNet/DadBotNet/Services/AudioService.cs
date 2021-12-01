@@ -33,11 +33,21 @@ namespace DadBotNet.Services
 
         public async Task SendAudioAsync(IGuild guild, byte[] data)
         {
-            using (var stream = audioClient.CreatePCMStream(AudioApplication.Voice))
+            using (var stream = audioClient.CreatePCMStream(AudioApplication.Mixed))
             {
                 MemoryStream memStream = new MemoryStream(data);
                 await memStream.CopyToAsync(stream);
                 await stream.FlushAsync();
+            }
+        }
+
+        public async Task SendAudioAsyncFFMPEG()
+        {
+            using (var ffmpeg = CreateProcess(Directory.GetCurrentDirectory() + "/test.mp3"))
+            using (var stream = audioClient.CreatePCMStream(AudioApplication.Music))
+            {
+                try { await ffmpeg.StandardOutput.BaseStream.CopyToAsync(stream); }
+                finally { await stream.FlushAsync(); }
             }
         }
 
@@ -66,6 +76,17 @@ namespace DadBotNet.Services
             process.StandardInput.Close();
 
             return process;
+        }
+
+        private Process CreateProcess(string path)
+        {
+            return Process.Start(new ProcessStartInfo
+            {
+                FileName = "ffmpeg.exe",
+                Arguments = $"-hide_banner -loglevel panic -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
+                UseShellExecute = false,
+                RedirectStandardOutput = true
+            });
         }
     }
 }
