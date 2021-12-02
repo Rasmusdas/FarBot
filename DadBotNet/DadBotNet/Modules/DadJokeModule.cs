@@ -105,13 +105,13 @@ namespace DadBotNet.Modules
             }
 
             Debug.Log("Joining Channel");
-            await _audioService.JoinAudio(user.VoiceChannel);
+            var audioConnection = await _audioService.JoinAudio(user.VoiceChannel);
 
             Debug.Log("Speaking in Channel");
-            await _audioService.SendAudioAsyncFFMPEG();
+            await _audioService.SendAudioAsync(audioConnection, voiceBytes);
 
             Debug.Log("Leaving Channel");
-            await _audioService.LeaveAudio();
+            await _audioService.LeaveAudio(user.VoiceChannel);
         }
 
         private byte[] ConvertJokeResultToVoiceBytes(string byteResult)

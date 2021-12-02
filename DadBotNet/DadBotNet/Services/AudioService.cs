@@ -13,25 +13,25 @@ namespace DadBotNet.Services
 {
     public class AudioService
     {
-        IVoiceChannel currentVoice;
-        IAudioClient audioClient;
-        public async Task JoinAudio(IVoiceChannel target)
+        public Task<IAudioClient> JoinAudio(IVoiceChannel target)
         {
-            currentVoice = target;
-            audioClient = await currentVoice.ConnectAsync(false,false,false);
+            return target.ConnectAsync(false,false,false);
         }
 
-        public async Task LeaveAudio()
+        public Task LeaveAudio(IVoiceChannel currentVoice)
         {
             if(currentVoice != null)
             {
-                await currentVoice.DisconnectAsync();
-                audioClient = null;
-                currentVoice = null;
+                return currentVoice.DisconnectAsync();
+            }
+            else
+            {
+                Debug.Log("Tried to leave channel I wasn't in", DebugLevel.Error);
+                return null;
             }
         }
 
-        public async Task SendAudioAsync(IGuild guild, byte[] data)
+        public async Task SendAudioAsync(IAudioClient audioClient, byte[] data)
         {
             using (var stream = audioClient.CreatePCMStream(AudioApplication.Mixed))
             {
@@ -41,7 +41,7 @@ namespace DadBotNet.Services
             }
         }
 
-        public async Task SendAudioAsyncFFMPEG()
+        public async Task SendAudioAsyncFFMPEG(IAudioClient audioClient)
         {
             using (var ffmpeg = CreateProcess(Directory.GetCurrentDirectory() + "/test.mp3"))
             using (var stream = audioClient.CreatePCMStream(AudioApplication.Music))
@@ -55,7 +55,7 @@ namespace DadBotNet.Services
         {
             var argumentBuilder = new List<string>();
 
-            var argument = "-i pipe:0 -ar 44100 -f wav -ac 2 pipe:1";
+            var argument = "-i pipe:0 -ar 48000 -f wav -ac 2 pipe:1";
             Process process = new Process();
             
             process.StartInfo = new ProcessStartInfo
@@ -78,15 +78,12 @@ namespace DadBotNet.Services
             return process;
         }
 
-        private Process CreateProcess(string path)
+        private Process CreateProcess(string path) => Process.Start(new ProcessStartInfo
         {
-            return Process.Start(new ProcessStartInfo
-            {
-                FileName = "ffmpeg.exe",
-                Arguments = $"-hide_banner -loglevel panic -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
-                UseShellExecute = false,
-                RedirectStandardOutput = true
-            });
-        }
+            FileName = "ffmpeg.exe",
+            Arguments = $"-hide_banner -loglevel panic -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
+            UseShellExecute = false,
+            RedirectStandardOutput = true
+        });
     }
 }

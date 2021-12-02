@@ -50,7 +50,7 @@ namespace DadBotNet.Services
                 newJokeIndex = random.Next(jokes.Count);
             }
 
-            return jokes[0];
+            return jokes[newJokeIndex];
         }
 
         public byte[] GetJokeByteData(Joke joke)
