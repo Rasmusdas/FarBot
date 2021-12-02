@@ -8,21 +8,22 @@ using System.Threading.Tasks;
 
 namespace DadBotNet.Utils
 {
-    public static class Debug
+    public static class Logger
     {
-        private static readonly ReadOnlyDictionary<DebugLevel, ConsoleColor> _levelToColor = new ReadOnlyDictionary<DebugLevel, ConsoleColor>(new Dictionary<DebugLevel, ConsoleColor>() {
-            { DebugLevel.Info, ConsoleColor.Green },
-            { DebugLevel.Warning, ConsoleColor.Yellow },
-            { DebugLevel.Error, ConsoleColor.Red }
+        private static readonly ReadOnlyDictionary<LoggerLevel, ConsoleColor> _levelToColor = new ReadOnlyDictionary<LoggerLevel, ConsoleColor>(new Dictionary<LoggerLevel, ConsoleColor>() {
+            { LoggerLevel.Info, ConsoleColor.Green },
+            { LoggerLevel.Warning, ConsoleColor.Yellow },
+            { LoggerLevel.Error, ConsoleColor.Red }
         });
         static bool _debugEnabled = false;
-        static Debug()
+        static Logger()
         {
+            Console.ForegroundColor = ConsoleColor.Gray;
             ConfigService config = new ConfigService();
-            _debugEnabled = (config.GetField("enableDebugInfo").ToLower() == "true");
+            _debugEnabled = config.GetField("enableDebugInfo").ToLower() == "true";
         }
 
-        public static void Log(string message, DebugLevel level = DebugLevel.Info)
+        public static void Log(string message, LoggerLevel level = LoggerLevel.Info)
         {
             if(_debugEnabled)
             {
@@ -30,12 +31,12 @@ namespace DadBotNet.Utils
             }
         }
 
-        public static void Log(object message, DebugLevel level = DebugLevel.Info)
+        public static void Log(object message, LoggerLevel level = LoggerLevel.Info)
         {
             Log(message.ToString(), level);
         }
 
-        private static void PrintInfoMessage(string message, DebugLevel level)
+        private static void PrintInfoMessage(string message, LoggerLevel level)
         {
             Console.Write($"[{GetCurrentTime()}] ");
 

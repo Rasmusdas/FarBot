@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Debug = DadBotNet.Utils.Debug;
+using Logger = DadBotNet.Utils.Logger;
 
 namespace DadBotNet.Services
 {
@@ -26,7 +26,7 @@ namespace DadBotNet.Services
             }
             else
             {
-                Debug.Log("Tried to leave channel I wasn't in", DebugLevel.Error);
+                Logger.Log("Tried to leave channel I wasn't in", LoggerLevel.Error);
                 return null;
             }
         }
@@ -41,9 +41,9 @@ namespace DadBotNet.Services
             }
         }
 
-        public async Task SendAudioAsyncFFMPEG(IAudioClient audioClient)
+        public async Task SendAudioAsyncFFMPEG(IAudioClient audioClient, byte[] data)
         {
-            using (var ffmpeg = CreateProcess(Directory.GetCurrentDirectory() + "/test.mp3"))
+            using (var ffmpeg = CreateProcess(data))
             using (var stream = audioClient.CreatePCMStream(AudioApplication.Music))
             {
                 try { await ffmpeg.StandardOutput.BaseStream.CopyToAsync(stream); }

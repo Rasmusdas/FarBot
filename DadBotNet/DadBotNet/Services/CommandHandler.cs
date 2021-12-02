@@ -77,7 +77,6 @@ namespace DadBotNet.Services
             var context = new SocketCommandContext(_client, message);
             // Execute the command with the command context we just
             // created, along with the service provider for precondition checks.
-            Debug.Log($"Executing command {message}");
 
             await _commands.ExecuteAsync(
                 context: context,

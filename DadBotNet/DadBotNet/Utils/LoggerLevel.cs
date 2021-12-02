@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DadBotNet.Utils
 {
-    public enum DebugLevel
+    public enum LoggerLevel
     {
         Info,Warning,Error
     }

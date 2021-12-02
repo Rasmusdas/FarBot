@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Debug = DadBotNet.Utils.Debug;
+using Logger = DadBotNet.Utils.Logger;
 
 namespace DadBotNet.Modules
 {
@@ -31,6 +31,14 @@ namespace DadBotNet.Modules
         public async Task TellJokeInTextChannel()
         {
             await Context.Channel.SendMessageAsync(_dadJokeService.GetJoke().ToString());
+        }
+
+        [Command("farmeme")]
+        [Summary("Fortæller en far joke")]
+        [Alias("dadpic","farmigmig")]
+        public async Task TellJokePictureInChannel()
+        {
+            await Context.Channel.SendFileAsync(_dadJokeService.GetJokePicturePath());
         }
 
 
@@ -78,90 +86,20 @@ namespace DadBotNet.Modules
                 return;
             }
 
-            Debug.Log("Getting Joke");
+            Logger.Log("Getting Joke");
             var dadJoke = _dadJokeService.GetJoke();
 
             byte[] voiceBytes = _dadJokeService.GetJokeByteData(dadJoke);
 
-            if (!dadJoke.AlreadyProcessed)
-            {
-                Debug.Log("Joke bytes were not found. Generating new ones",DebugLevel.Warning);
-                Debug.Log("Processing Joke");
-                var cleanedDadJoke = PrepareJokeForPowershell(dadJoke.ToString());
-
-                Debug.Log("Creating Process");
-                Process powershellProcess = CreateTTSProcess(cleanedDadJoke);
-
-                Debug.Log("Starting Process");
-                powershellProcess.Start();
-
-                Debug.Log("Reading Data from Process");
-                string byteResult = await powershellProcess.StandardOutput.ReadToEndAsync();
-
-                Debug.Log("Parsing Data");
-                voiceBytes = ConvertJokeResultToVoiceBytes(byteResult);
-
-                File.WriteAllBytes($"{Directory.GetCurrentDirectory()}/Jokes/joke{dadJoke.jokeIndex}",voiceBytes);
-            }
-
-            Debug.Log("Joining Channel");
+            Logger.Log("Joining Channel");
             var audioConnection = await _audioService.JoinAudio(user.VoiceChannel);
 
-            Debug.Log("Speaking in Channel");
-            await _audioService.SendAudioAsync(audioConnection, voiceBytes);
+            Logger.Log("Speaking in Channel");
+            await Context.Channel.SendMessageAsync(dadJoke.ToString());
+            await _audioService.SendAudioAsyncFFMPEG(audioConnection, voiceBytes);
 
-            Debug.Log("Leaving Channel");
+            Logger.Log("Leaving Channel");
             await _audioService.LeaveAudio(user.VoiceChannel);
-        }
-
-        private byte[] ConvertJokeResultToVoiceBytes(string byteResult)
-        {
-            string[] splitBytes = byteResult.Split('-');
-
-            byte[] bytes = new byte[splitBytes.Length];
-
-            for (int i = 0; i < splitBytes.Length; i++)
-            {
-                bytes[i] = byte.Parse(splitBytes[i]);
-            }
-
-            return bytes;
-        }
-
-        private Process CreateTTSProcess(string cleanedDadJoke)
-        {
-            string voiceType = _configService.GetField("voice");
-            var command = "Add-Type -AssemblyName System.speech;$speak = New-Object System.Speech.Synthesis.SpeechSynthesizer;";
-            command += $"$speak.SelectVoice(\\\"{voiceType}\\\");";
-            command += " $format = New-Object System.Speech.AudioFormat.SpeechAudioFormatInfo(96000,[System.Speech.AudioFormat.AudioBitsPerSample]::Sixteen,[System.Speech.AudioFormat.AudioChannel]::Mono);";
-            command += "$OutStream = [System.IO.MemoryStream]::new(1000);";
-            command += "$speak.SetOutputToAudioStream($OutStream,$format);";
-            command += $"$speak.Speak(\\\"{cleanedDadJoke}\\\");";
-            command += "$speak.Dispose();";
-            command += "$data = $OutStream.ToArray() -join '-';";
-            command += "Write-Output $data;";
-
-            Debug.Log(command);
-            ProcessStartInfo powerShellProcessInfo = new();
-
-            powerShellProcessInfo.FileName = @"powershell.exe";
-            powerShellProcessInfo.Arguments = command;
-            powerShellProcessInfo.RedirectStandardOutput = true;
-            powerShellProcessInfo.UseShellExecute = false;
-            powerShellProcessInfo.CreateNoWindow = false;
-
-            Process process = new();
-            process.StartInfo = powerShellProcessInfo;
-
-            return process;
-
-        }
-
-        private string PrepareJokeForPowershell(string dadJoke)
-        {
-            dadJoke = dadJoke.Replace("\"", "\\\"");
-
-            return dadJoke;
         }
     }
 }
