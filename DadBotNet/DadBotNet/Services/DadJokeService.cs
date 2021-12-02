@@ -84,6 +84,17 @@ namespace DadBotNet.Services
 
         public string GetJokePicturePath()
         {
+            if (Directory.GetFiles(Directory.GetCurrentDirectory() + "/Pictures").Length != jokePicturePaths.Length)
+            {
+                jokePicturePaths = Directory.GetFiles($"{Directory.GetCurrentDirectory()}/Pictures");
+
+                if(jokePicturePaths.Length == 0)
+                {
+                    Logger.Log($"No pictures could be found in {Directory.GetCurrentDirectory()}/Pictures");
+                    return "";
+                }
+            }
+
             int jokePics = jokePicturePaths.Length;
             int newPicIndex = random.Next(jokePics);
 
@@ -102,6 +113,8 @@ namespace DadBotNet.Services
         public byte[] GetJokeByteData(Joke joke)
         {
             var path = $"{Directory.GetCurrentDirectory()}/Jokes/joke{joke.jokeIndex}";
+
+            
 
             if (!File.Exists(path))
             {

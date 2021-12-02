@@ -38,7 +38,14 @@ namespace DadBotNet.Modules
         [Alias("dadpic","farmigmig")]
         public async Task TellJokePictureInChannel()
         {
-            await Context.Channel.SendFileAsync(_dadJokeService.GetJokePicturePath());
+            string path = _dadJokeService.GetJokePicturePath();
+
+            if(path == "")
+            {
+                return;
+            }
+
+            await Context.Channel.SendFileAsync(path);
         }
 
 
