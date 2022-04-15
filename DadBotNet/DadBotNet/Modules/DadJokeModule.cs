@@ -94,6 +94,7 @@ namespace DadBotNet.Modules
             }
 
             Logger.Log("Getting Joke");
+
             var dadJoke = _dadJokeService.GetJoke();
 
             byte[] voiceBytes = _dadJokeService.GetJokeByteData(dadJoke);
@@ -107,7 +108,7 @@ namespace DadBotNet.Modules
 
             Logger.Log("Leaving Channel");
             await _audioService.LeaveAudio(user.VoiceChannel);
-
+            await audioConnection.StopAsync();
             audioConnection.Dispose();
         }
     }

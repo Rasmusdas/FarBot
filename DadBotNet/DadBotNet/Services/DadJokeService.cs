@@ -109,20 +109,14 @@ namespace DadBotNet.Services
 
         public byte[] GetJokeByteData(Joke joke)
         {
-            var path = $"{Directory.GetCurrentDirectory()}/Jokes/joke{joke.jokeIndex}";
-
-            if (!File.Exists(path))
-            {
-                return null;
-            }
-
-            return File.ReadAllBytes(path);
+            return joke.voiceBytes;
         }
 
         private async Task GenerateJokeVoiceBytes(Joke joke)
         {
             if (joke.AlreadyProcessed)
             {
+                joke.voiceBytes = await File.ReadAllBytesAsync($"{Directory.GetCurrentDirectory()}/Jokes/joke{joke.jokeIndex}");
                 return;
             }
 

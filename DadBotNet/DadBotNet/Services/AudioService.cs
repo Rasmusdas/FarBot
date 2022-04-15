@@ -24,7 +24,6 @@ namespace DadBotNet.Services
             {
                 Logger.Log("Tried to leave channel I wasn't in", LoggerLevel.Error);
                 return null;
-             
             }
 
             return currentVoice.DisconnectAsync();
@@ -42,12 +41,22 @@ namespace DadBotNet.Services
 
         public async Task SendAudioAsyncFFMPEG(IAudioClient audioClient, byte[] data)
         {
-            using (var ffmpeg = CreateProcess(data))
-            using (var stream = audioClient.CreatePCMStream(AudioApplication.Music))
+            var watch = new Stopwatch();
+            
+            while(watch.ElapsedMilliseconds < 2000)
             {
-                try { await ffmpeg.StandardOutput.BaseStream.CopyToAsync(stream); }
-                finally { await stream.FlushAsync(); }
+                watch = new Stopwatch();
+                watch.Start();
+                using (var ffmpeg = CreateProcess(data))
+                using (var stream = audioClient.CreatePCMStream(AudioApplication.Music))
+                {
+                    try { await ffmpeg.StandardOutput.BaseStream.CopyToAsync(stream); }
+                    finally { await stream.FlushAsync(); }
+                }
+
+                watch.Stop();
             }
+            
         }
 
         private Process CreateProcess(byte[] data)
