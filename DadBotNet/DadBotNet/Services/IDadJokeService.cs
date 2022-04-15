@@ -12,5 +12,9 @@ namespace DadBotNet.Services
         Joke GetJoke();
 
         bool AddJoke(Joke joke);
+
+        byte[] GetJokeByteData(Joke joke);
+
+        string GetJokePicturePath();
     }
 }

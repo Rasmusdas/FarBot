@@ -12,13 +12,13 @@ namespace DadBotNet.Modules
 {
     public class DadJokeModule : ModuleBase<SocketCommandContext>
     {
-        DadJokeService _dadJokeService;
+        IDadJokeService _dadJokeService;
         AudioService _audioService;
         IConfigService _configService;
 
         bool isTalking;
 
-        public DadJokeModule(DadJokeService dadJokeService, AudioService audioService, IConfigService configService)
+        public DadJokeModule(IDadJokeService dadJokeService, AudioService audioService, IConfigService configService)
         {
             _dadJokeService = dadJokeService;
             _audioService = audioService;
@@ -107,6 +107,8 @@ namespace DadBotNet.Modules
 
             Logger.Log("Leaving Channel");
             await _audioService.LeaveAudio(user.VoiceChannel);
+
+            audioConnection.Dispose();
         }
     }
 }

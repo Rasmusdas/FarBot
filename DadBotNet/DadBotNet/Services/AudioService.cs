@@ -20,15 +20,14 @@ namespace DadBotNet.Services
 
         public Task LeaveAudio(IVoiceChannel currentVoice)
         {
-            if(currentVoice != null)
-            {
-                return currentVoice.DisconnectAsync();
-            }
-            else
+            if(currentVoice == null)
             {
                 Logger.Log("Tried to leave channel I wasn't in", LoggerLevel.Error);
                 return null;
+             
             }
+
+            return currentVoice.DisconnectAsync();
         }
 
         public async Task SendAudioAsync(IAudioClient audioClient, byte[] data)
@@ -53,8 +52,6 @@ namespace DadBotNet.Services
 
         private Process CreateProcess(byte[] data)
         {
-            var argumentBuilder = new List<string>();
-
             var argument = "-i pipe:0 -ar 48000 -f wav -ac 2 pipe:1";
             Process process = new Process();
             
@@ -77,13 +74,5 @@ namespace DadBotNet.Services
 
             return process;
         }
-
-        private Process CreateProcess(string path) => Process.Start(new ProcessStartInfo
-        {
-            FileName = "ffmpeg.exe",
-            Arguments = $"-hide_banner -loglevel panic -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
-            UseShellExecute = false,
-            RedirectStandardOutput = true
-        });
     }
 }

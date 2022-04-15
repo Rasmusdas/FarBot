@@ -16,6 +16,34 @@ namespace DadBotNet.Services
 
         public DadJokeService(IConfigService configService)
         {
+            CheckBaseDirectories();
+
+            _configService = configService;
+
+            allowSaving = bool.Parse(configService.GetField("allowWriteToJokeFile"));
+
+            random = new Random();
+
+            var path = configService.GetField("jokeFile");
+
+            if (!File.Exists(path))
+            {
+                Logger.Log($"Could not find file {path}", LoggerLevel.Error);
+                return;
+            }
+
+            jokes = LoadJokesFromFile(path);
+
+            foreach (var joke in jokes)
+            {
+                GenerateJokeVoiceBytes(joke);
+            }
+
+            jokePicturePaths = Directory.GetFiles($"{Directory.GetCurrentDirectory()}/Pictures");
+        }
+
+        private static void CheckBaseDirectories()
+        {
             if (!Directory.Exists(Directory.GetCurrentDirectory() + "/Jokes"))
             {
                 Logger.Log("Could not find /Jokes. Creating it instead", LoggerLevel.Warning);
@@ -27,40 +55,20 @@ namespace DadBotNet.Services
                 Logger.Log("Could not find /Pictures. Creating it instead", LoggerLevel.Warning);
                 Directory.CreateDirectory(Directory.GetCurrentDirectory() + "/Pictures");
             }
+        }
 
-            
-            _configService = configService;
-
-            allowSaving = bool.Parse(configService.GetField("allowWriteToJokeFile"));
-
-            random = new Random();
-
-            var path = configService.GetField("jokeFile");
-
-            if(!File.Exists(path))
-            {
-                Logger.Log($"Could not find file {path}",LoggerLevel.Error);
-                return;
-            }
-
+        private IReadOnlyList<Joke> LoadJokesFromFile(string path)
+        {
             var jokesFromFile = File.ReadAllLines(path);
+
             List<Joke> jokeList = new List<Joke>();
+
             for (int i = 0; i < jokesFromFile.Length; i++)
             {
-                jokeList.Add(new Joke(jokesFromFile[i],i));
+                jokeList.Add(new Joke(jokesFromFile[i], i));
             }
 
-            jokes = jokeList.AsReadOnly();
-
-            foreach(var joke in jokes)
-            {
-                if(!joke.AlreadyProcessed)
-                {
-                    GenerateJokeVoiceBytes(joke);
-                }
-            }
-
-            jokePicturePaths = Directory.GetFiles($"{Directory.GetCurrentDirectory()}/Pictures");
+            return jokeList.AsReadOnly();
         }
 
         public bool AddJoke(Joke joke)
@@ -70,12 +78,7 @@ namespace DadBotNet.Services
 
         public Joke GetJoke()
         {
-            int newJokeIndex = random.Next(jokes.Count);
-
-            while (newJokeIndex == lastJokeIndex)
-            {
-                newJokeIndex = random.Next(jokes.Count);
-            }
+            int newJokeIndex = GetUniqueIndex(jokes.Count, lastPicIndex);
 
             lastJokeIndex = newJokeIndex;
 
@@ -87,34 +90,26 @@ namespace DadBotNet.Services
             if (Directory.GetFiles(Directory.GetCurrentDirectory() + "/Pictures").Length != jokePicturePaths.Length)
             {
                 jokePicturePaths = Directory.GetFiles($"{Directory.GetCurrentDirectory()}/Pictures");
+            }
 
-                if(jokePicturePaths.Length == 0)
-                {
-                    Logger.Log($"No pictures could be found in {Directory.GetCurrentDirectory()}/Pictures");
-                    return "";
-                }
+            if (jokePicturePaths.Length == 0)
+            {
+                Logger.Log($"No pictures could be found in {Directory.GetCurrentDirectory()}/Pictures");
+                return "";
             }
 
             int jokePics = jokePicturePaths.Length;
-            int newPicIndex = random.Next(jokePics);
 
-            while (newPicIndex == lastPicIndex)
-            {
-                newPicIndex = random.Next(jokePics);
-            }
+            int newPicIndex = GetUniqueIndex(jokePics, lastPicIndex);
 
             lastPicIndex = newPicIndex;
 
             return jokePicturePaths[newPicIndex];
-
-
         }
 
         public byte[] GetJokeByteData(Joke joke)
         {
             var path = $"{Directory.GetCurrentDirectory()}/Jokes/joke{joke.jokeIndex}";
-
-            
 
             if (!File.Exists(path))
             {
@@ -124,8 +119,13 @@ namespace DadBotNet.Services
             return File.ReadAllBytes(path);
         }
 
-        public async Task GenerateJokeVoiceBytes(Joke joke)
+        private async Task GenerateJokeVoiceBytes(Joke joke)
         {
+            if (joke.AlreadyProcessed)
+            {
+                return;
+            }
+
             Logger.Log($"Generating voice bytes for follow jokes\n{joke}", LoggerLevel.Info);
 
             var cleanedDadJoke = PrepareJokeForPowershell(joke.ToString());
@@ -140,6 +140,10 @@ namespace DadBotNet.Services
 
             Logger.Log($"Saving Data to {Directory.GetCurrentDirectory()}/Jokes/joke{joke.jokeIndex}");
             File.WriteAllBytes($"{Directory.GetCurrentDirectory()}/Jokes/joke{joke.jokeIndex}", voiceBytes);
+
+            powershellProcess.Close();
+
+            powershellProcess.Dispose();
         }
 
         private byte[] ConvertJokeResultToVoiceBytes(string byteResult)
@@ -203,6 +207,19 @@ namespace DadBotNet.Services
                 }
             }
             return newDadJoke;
+        }
+
+        private int GetUniqueIndex(int length, int oldIndex)
+        {
+            int newIndex = random.Next(length);
+
+            while (newIndex == oldIndex)
+            {
+                newIndex = random.Next(length);
+            }
+
+            return newIndex;
+
         }
     }
 }
